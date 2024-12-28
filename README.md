@@ -35,7 +35,7 @@ The project includes priority-based request handling, adherence to First-Come-Fi
    ```
 2. Navigate to the project directory:
    ```bash
-   cd Priority_Queue_Implementation_With_Upstash
+   cd Priority_Queue_Service
    ```
 3. Run UnitTests:
    ```bash
