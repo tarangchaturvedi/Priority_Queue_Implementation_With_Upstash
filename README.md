@@ -37,9 +37,9 @@ The project includes priority-based request handling, adherence to First-Come-Fi
    ```bash
    cd Priority_Queue_Service
    ```
-3. Run UnitTests:
+3. Run UnitTests with mvn package:
    ```bash
-   run tests from the command-line with mvn package
+   mvn test
    ```
 ---
 
