@@ -42,7 +42,7 @@ public class InMemoryPriorityQueueService implements QueueService {
     }
 
     @Override
-    public Message pull(String queueUrl, boolean toremove) {
+    public Message pull(String queueUrl) {
         PriorityBlockingQueue<Message> queue = queues.get(queueUrl);
         if (queue == null) { // return Null if EptyQueue.
             return null;
@@ -55,16 +55,12 @@ public class InMemoryPriorityQueueService implements QueueService {
             msg = it.next();
             
             if (msg != null && msg.isVisibleAt(nowTime)) {
-                if (toremove){
-                    it.remove();  // Remove it from the queue once pulled.
-                }
-
                 msg.setReceiptId(UUID.randomUUID().toString()); // Set a new receipt ID and increment attempt count and visibility timeout.
                 msg.incrementAttempts();
-                
                 msg.setVisibleFrom(System.nanoTime() + TimeUnit.SECONDS.toNanos(visibilityTimeout));
                 // msg.setVisibleFrom(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(visibilityTimeout));
-                System.out.println("Pulling mesggae: " + msg);
+                
+                System.out.println("Pulled mesggae: " + msg);
                 return new Message(msg.getBody(), msg.getReceiptId()); // Return message with the body and receipt ID
             }
         }
@@ -76,7 +72,6 @@ public class InMemoryPriorityQueueService implements QueueService {
     public void delete(String queueUrl, String receiptId) {
         PriorityBlockingQueue<Message> queue = queues.get(queueUrl);
         if (queue != null) {
-            long nowTime = now();
             for (Iterator<Message> it = queue.iterator(); it.hasNext(); ) {
                 Message msg = it.next();
                 if (msg.getReceiptId().equals(receiptId)) {
@@ -90,5 +85,9 @@ public class InMemoryPriorityQueueService implements QueueService {
 
     long now() {
         return System.nanoTime(); // NanoTime is used as two messages with same priority can be enqueued at same MilliSecond time.
+    }
+
+    @Override
+    public void clearQueue(String queueUrl) {
     }
 }

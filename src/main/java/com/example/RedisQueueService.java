@@ -46,17 +46,17 @@ public class RedisQueueService implements QueueService {
     }
 
     @Override
-    public Message pull(String queueUrl, boolean toremove) {
+    public Message pull(String queueUrl) {
         
         Long nowTime = now();
         try {
-            Set<Tuple> tuples = this.jedis.zrangeWithScores(queueUrl, 0, 0); // To fetch the message with the lowest score (highest priority)
-            if (tuples == null || tuples.isEmpty()) {
+            // Finding visible message with the highest priority(lowest score).
+            Set<Tuple> tuples = this.jedis.zrangeWithScores(queueUrl, 0, -1);
+            if (tuples.isEmpty()) {
                 return null;
             }
             for (Tuple tuple : tuples) {
                 String deserializedMessage = tuple.getElement();
-                // System.out.println("deserializedMessage: " + deserializedMessage);
                 Message msg = new Gson().fromJson(deserializedMessage, Message.class);
                 
                 if (msg != null && msg.isVisibleAt(nowTime)) {
@@ -64,10 +64,14 @@ public class RedisQueueService implements QueueService {
                     msg.incrementAttempts();
                     // msg.setVisibleFrom(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(visibilityTimeout));
                     msg.setVisibleFrom(System.nanoTime() + TimeUnit.SECONDS.toNanos(visibilityTimeout));
-                    if (toremove){
-                        this.jedis.zrem(queueUrl, deserializedMessage);
-                    }
                     
+                    // Update the message in the queue with the modified attributes
+                    String updatedMessage = new Gson().toJson(msg);
+                    double updatedScore = tuple.getScore();
+                    this.jedis.zrem(queueUrl, deserializedMessage);
+                    this.jedis.zadd(queueUrl, updatedScore, updatedMessage);
+                    
+                    System.out.println("Pulled mesggae: " + msg);
                     return new Message(msg.getBody(), msg.getReceiptId()); // Return the message with the receipt ID
                 }
             }
@@ -105,4 +109,11 @@ public class RedisQueueService implements QueueService {
         return messageScore;
         
     }
+
+    @Override
+    public void clearQueue(String queueUrl) {
+        jedis.del(queueUrl); // Deletes the Redis key corresponding to the queue
+        // jedis.close();
+    }
+
 }

@@ -79,7 +79,7 @@ public class Message implements Comparable<Message>{
 
   @Override
   public String toString() {
-      return "Message{body='" + msgBody + "', priority=" + priority + ", timestamp=" + timestamp + "}";
+      return "Message{body='" + msgBody + "', priority=" + priority + ", timestamp=" + timestamp + ", visibleFrom=" + visibleFrom + "}";
   }
 
   @Override
