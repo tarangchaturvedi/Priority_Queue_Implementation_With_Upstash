@@ -37,16 +37,21 @@ public class UpstashRedisQueueTest {
 
     @Test
     public void testPullMessage() {
-        String msgBody = "priority_test_message first";
-        String msgBody2 = "priority_test_message second";
+        String msgBody1 = "tarang_chaturvedi First";
+        String msgBody2 = "tarang_chaturvedi Second";
+        String msgBody3 = "tarang_chaturvedi Third";
 
-        qs.push(queueUrl, msgBody, 2);
-        qs.push(queueUrl, msgBody2, 1);
+        qs.push(queueUrl, msgBody1, 2);
+        qs.push(queueUrl, msgBody2, 3);
+        qs.push(queueUrl, msgBody3, 1);
+
         Message msg1 = qs.pull(queueUrl, true);
         Message msg2 = qs.pull(queueUrl, true);
-
-        assertEquals(msgBody, msg1.getBody());
-        // assertTrue(msg1.getReceiptId() != null && msg1.getReceiptId().length() > 0);
+        Message msg3= qs.pull(queueUrl, true);
+        
+        // pulled messages should have order msgBody2(priority=3) ---> msgBody1(priority=2) ---> msgBody3(priority=1)
+        
+        assertTrue(msgBody1.equals(msg2.getBody()) && msgBody2.equals(msg1.getBody()) && msgBody3.equals(msg3.getBody()));
     }
 
     @Test
@@ -96,7 +101,8 @@ public class UpstashRedisQueueTest {
 		RedisQueueService queueService = new RedisQueueService() {
             @Override
 			long now() {
-				return System.currentTimeMillis() + 1000 * 30 + 1;
+				// return System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(this.visibilityTimeout) + 1;
+                return System.nanoTime() + TimeUnit.SECONDS.toNanos(this.visibilityTimeout) + 1;
 			}
 		};
 		
