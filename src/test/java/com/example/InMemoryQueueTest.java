@@ -29,16 +29,20 @@ public class InMemoryQueueTest {
 
     @Test
     public void testPullMessage() {
-        String msgBody = "tarang_chaturvedi First";
+        String msgBody1 = "tarang_chaturvedi First";
         String msgBody2 = "tarang_chaturvedi Second";
+        String msgBody3 = "tarang_chaturvedi Third";
 
-        qs.push(queueUrl, msgBody, 1);
-        qs.push(queueUrl, msgBody2, 2); 
+        qs.push(queueUrl, msgBody1, 2);
+        qs.push(queueUrl, msgBody2, 3);
+        qs.push(queueUrl, msgBody3, 1);
         Message msg1 = qs.pull(queueUrl, true);
         Message msg2 = qs.pull(queueUrl, true);
-
-        assertEquals(msgBody2, msg1.getBody());
-        // assertTrue(msg.getReceiptId() != null && msg.getReceiptId().length() > 0);
+        Message msg3= qs.pull(queueUrl, true);
+        
+        // pulled messages should have order msgBody2(priority=3) ---> msgBody1(priority=2) ---> msgBody3(priority=1)
+        
+        assertTrue(msgBody1.equals(msg2.getBody()) && msgBody2.equals(msg1.getBody()) && msgBody3.equals(msg3.getBody()));
     }
 
     @Test
@@ -86,4 +90,22 @@ public class InMemoryQueueTest {
 
         assertTrue(msgStrs[0].equals(msg1.getBody()) && msgStrs[1].equals(msg2.getBody()) && msgStrs[2].equals(msg3.getBody()));
     }
+
+    @Test
+	public void testAckTimeout(){
+		InMemoryPriorityQueueService queueService = new InMemoryPriorityQueueService() {
+            @Override
+			long now() {
+				return System.nanoTime() + 1000 * 30 + 1;
+			}
+		};
+		
+        String msgbody = "Check Message";
+
+		queueService.push(queueUrl, msgbody, 1);
+		queueService.pull(queueUrl,false);
+		Message msg = queueService.pull(queueUrl, true);
+		assertTrue(msg != null && msgbody.equals(msg.getBody()));
+	}
+
 }
