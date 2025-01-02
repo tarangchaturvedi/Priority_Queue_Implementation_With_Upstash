@@ -50,12 +50,15 @@ public class RedisQueueService implements QueueService {
         Long nowTime = now();
         try {
             Set<Tuple> tuples = this.jedis.zrangeWithScores(queueUrl, 0, 0); // To fetch the message with the lowest score (highest priority)
+            if (tuples == null || tuples.isEmpty()) {
+                return null;
+            }
             for (Tuple tuple : tuples) {
                 String deserializedMessage = tuple.getElement();
                 // System.out.println("deserializedMessage: " + deserializedMessage);
                 Message msg = new Gson().fromJson(deserializedMessage, Message.class);
                 
-                if (msg != null) {
+                if (msg != null && msg.isVisibleAt(nowTime)) {
                     // msg.setReceiptId(UUID.randomUUID().toString()); // Set a new receipt ID and increment attempt count and visibility timeout.
                     msg.incrementAttempts();
                     msg.setVisibleFrom(nowTime + TimeUnit.SECONDS.toMillis(visibilityTimeout));
