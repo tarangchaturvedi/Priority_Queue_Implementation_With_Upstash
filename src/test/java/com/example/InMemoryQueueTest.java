@@ -19,6 +19,7 @@ public class InMemoryQueueTest {
     @Before
     public void setup() {
         qs = new InMemoryPriorityQueueService(); // Using the InMemoryPriorityQueueService object.
+        qs.clearQueue(queueUrl); // Clear the queue to ensure a clean state
     }
 
     @Test
