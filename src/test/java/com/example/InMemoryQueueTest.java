@@ -1,5 +1,8 @@
 package com.example;
 
+import java.awt.SystemTray;
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -36,6 +39,7 @@ public class InMemoryQueueTest {
         qs.push(queueUrl, msgBody1, 2);
         qs.push(queueUrl, msgBody2, 3);
         qs.push(queueUrl, msgBody3, 1);
+
         Message msg1 = qs.pull(queueUrl, true);
         Message msg2 = qs.pull(queueUrl, true);
         Message msg3= qs.pull(queueUrl, true);
@@ -96,14 +100,14 @@ public class InMemoryQueueTest {
 		InMemoryPriorityQueueService queueService = new InMemoryPriorityQueueService() {
             @Override
 			long now() {
-				return System.nanoTime() + 1000 * 30 + 1;
+				return System.nanoTime() + TimeUnit.SECONDS.toNanos(this.visibilityTimeout) + 1;
 			}
 		};
 		
         String msgbody = "Check Message";
-
 		queueService.push(queueUrl, msgbody, 1);
-		queueService.pull(queueUrl,false);
+        queueService.pull(queueUrl,false);
+        
 		Message msg = queueService.pull(queueUrl, true);
 		assertTrue(msg != null && msgbody.equals(msg.getBody()));
 	}
