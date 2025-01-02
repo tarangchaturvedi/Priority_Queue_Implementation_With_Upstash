@@ -15,7 +15,7 @@ import com.google.gson.GsonBuilder;
 public class RedisQueueService implements QueueService {
 
     private final Jedis jedis;
-    private final Integer visibilityTimeout;
+    protected final Integer visibilityTimeout;
 
     public RedisQueueService() {
         this.jedis = new Jedis("usable-magpie-43846.upstash.io", 6379, true);
@@ -34,7 +34,8 @@ public class RedisQueueService implements QueueService {
     public void push(String queueUrl, String message, int priority) {
         try {
             System.out.println("Pushing message: " + message + " with priority: " + priority);
-            Message msg = new Message(message, priority, System.currentTimeMillis());
+            // Message msg = new Message(message, priority, System.currentTimeMillis());
+            Message msg = new Message(message, priority, System.nanoTime());
             msg.setReceiptId(UUID.randomUUID().toString());
             // System.out.println("Serialized Message: " + new Gson().toJson(msg));
     
@@ -61,7 +62,8 @@ public class RedisQueueService implements QueueService {
                 if (msg != null && msg.isVisibleAt(nowTime)) {
                     // msg.setReceiptId(UUID.randomUUID().toString()); // Set a new receipt ID and increment attempt count and visibility timeout.
                     msg.incrementAttempts();
-                    msg.setVisibleFrom(nowTime + TimeUnit.SECONDS.toMillis(visibilityTimeout));
+                    // msg.setVisibleFrom(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(visibilityTimeout));
+                    msg.setVisibleFrom(System.nanoTime() + TimeUnit.SECONDS.toNanos(visibilityTimeout));
                     if (toremove){
                         this.jedis.zrem(queueUrl, deserializedMessage);
                     }
@@ -95,7 +97,7 @@ public class RedisQueueService implements QueueService {
     }
 
     long now() {
-        return System.currentTimeMillis();
+        return System.nanoTime();
     }
 
     private double score(Message message) { // The score is based on the priority and timestamp, Highest Priority message will have Lowest Score.
