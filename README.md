@@ -31,7 +31,7 @@ The project includes priority-based request handling, adherence to First-Come-Fi
 ## Execution
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/tarangchaturvedi/Priority_Queue_Implementation_With_Upstash.git](https://github.com/tarangchaturvedi/Priority_Queue_Service)
+   git clone https://github.com/tarangchaturvedi/Priority_Queue_Service.git
    ```
 2. Navigate to the project directory:
    ```bash
