@@ -105,9 +105,8 @@ public class UpstashRedisQueueTest {
 		queueService.push(queueUrl, msgbody, 1);
 		queueService.pull(queueUrl,false);
 		Message msg = queueService.pull(queueUrl, true);
-		// assertTrue(msg != null);
-        // assertTrue(msgbody.equals(msg.getBody()));
-        // assertTrue(msg != null && msgbody.equals(msg.getBody()));
+		
+        assertTrue(msg != null && msgbody.equals(msg.getBody()));
 	}
 
 }
