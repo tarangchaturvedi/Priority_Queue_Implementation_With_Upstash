@@ -53,7 +53,7 @@ public class InMemoryPriorityQueueService implements QueueService {
         // Find the highest priority message.
         for (Iterator<Message> it = queue.iterator(); it.hasNext(); ) {
             msg = it.next();
-            if (msg.isVisibleAt(nowTime)) {
+            if (msg != null && msg.isVisibleAt(nowTime)) {
                 if (toremove){
                     it.remove();  // Remove it from the queue once pulled.
                 }
