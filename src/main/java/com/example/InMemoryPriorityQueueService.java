@@ -10,7 +10,7 @@ import java.util.concurrent.*;
 
 public class InMemoryPriorityQueueService implements QueueService {
     private final Map<String, PriorityBlockingQueue<Message>> queues;
-    private final long visibilityTimeout;
+    protected final long visibilityTimeout;
 
     InMemoryPriorityQueueService() {
         this.queues = new ConcurrentHashMap<>();
@@ -36,7 +36,7 @@ public class InMemoryPriorityQueueService implements QueueService {
         }
 
         long nowTime = now();
-        Message newmessage = new Message(msgBody, priority, nowTime);
+        Message newmessage = new Message(msgBody, priority, System.nanoTime());
         // newmessage.setReceiptId(UUID.randomUUID().toString());
         queue.add(newmessage);
     }
@@ -53,6 +53,7 @@ public class InMemoryPriorityQueueService implements QueueService {
         // Find the highest priority message.
         for (Iterator<Message> it = queue.iterator(); it.hasNext(); ) {
             msg = it.next();
+            
             if (msg != null && msg.isVisibleAt(nowTime)) {
                 if (toremove){
                     it.remove();  // Remove it from the queue once pulled.
@@ -60,8 +61,10 @@ public class InMemoryPriorityQueueService implements QueueService {
 
                 msg.setReceiptId(UUID.randomUUID().toString()); // Set a new receipt ID and increment attempt count and visibility timeout.
                 msg.incrementAttempts();
-                msg.setVisibleFrom(nowTime + TimeUnit.SECONDS.toMillis(visibilityTimeout));
-
+                
+                msg.setVisibleFrom(System.nanoTime() + TimeUnit.SECONDS.toNanos(visibilityTimeout));
+                // msg.setVisibleFrom(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(visibilityTimeout));
+                System.out.println("Pulling mesggae: " + msg);
                 return new Message(msg.getBody(), msg.getReceiptId()); // Return message with the body and receipt ID
             }
         }
