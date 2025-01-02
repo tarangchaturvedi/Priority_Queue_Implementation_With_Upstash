@@ -89,5 +89,6 @@ public class InMemoryPriorityQueueService implements QueueService {
 
     @Override
     public void clearQueue(String queueUrl) {
+        queues.remove(queueUrl);        
     }
 }

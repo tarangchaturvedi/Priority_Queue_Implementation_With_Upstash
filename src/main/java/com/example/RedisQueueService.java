@@ -51,7 +51,7 @@ public class RedisQueueService implements QueueService {
         Long nowTime = now();
         try {
             // Finding visible message with the highest priority(lowest score).
-            Set<Tuple> tuples = this.jedis.zrangeWithScores(queueUrl, 0, -1);
+            Set<Tuple> tuples = jedis.zrangeWithScores(queueUrl, 0, -1);
             if (tuples.isEmpty()) {
                 return null;
             }
@@ -70,7 +70,7 @@ public class RedisQueueService implements QueueService {
                     double updatedScore = tuple.getScore();
                     this.jedis.zrem(queueUrl, deserializedMessage);
                     this.jedis.zadd(queueUrl, updatedScore, updatedMessage);
-                    
+
                     System.out.println("Pulled mesggae: " + msg);
                     return new Message(msg.getBody(), msg.getReceiptId()); // Return the message with the receipt ID
                 }
