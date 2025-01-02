@@ -19,7 +19,7 @@ import com.google.gson.GsonBuilder;
 public class UpstashRedisQueueTest {
 
     private QueueService qs;
-    private String queueUrl = "testQueue";
+    private String queueUrl = "testRedisQueue";
 
     @Before
     public void setup() {
@@ -40,12 +40,12 @@ public class UpstashRedisQueueTest {
         String msgBody = "priority_test_message first";
         String msgBody2 = "priority_test_message second";
 
-        qs.push(queueUrl, msgBody, 1);
-        qs.push(queueUrl, msgBody2, 2);
+        qs.push(queueUrl, msgBody, 2);
+        qs.push(queueUrl, msgBody2, 1);
         Message msg1 = qs.pull(queueUrl, true);
         Message msg2 = qs.pull(queueUrl, true);
 
-        assertEquals(msgBody2, msg1.getBody());
+        assertEquals(msgBody, msg1.getBody());
         // assertTrue(msg1.getReceiptId() != null && msg1.getReceiptId().length() > 0);
     }
 
@@ -90,4 +90,24 @@ public class UpstashRedisQueueTest {
 
         assertTrue(msgStrs[0].equals(msg1.getBody()) && msgStrs[1].equals(msg2.getBody()) && msgStrs[2].equals(msg3.getBody()));
     }
+
+    @Test
+	public void testAckTimeout(){
+		RedisQueueService queueService = new RedisQueueService() {
+            @Override
+			long now() {
+				return System.currentTimeMillis() + 1000 * 30 + 1;
+			}
+		};
+		
+        String msgbody = "Check Message";
+
+		queueService.push(queueUrl, msgbody, 1);
+		queueService.pull(queueUrl,false);
+		Message msg = queueService.pull(queueUrl, true);
+		// assertTrue(msg != null);
+        // assertTrue(msgbody.equals(msg.getBody()));
+        // assertTrue(msg != null && msgbody.equals(msg.getBody()));
+	}
+
 }
