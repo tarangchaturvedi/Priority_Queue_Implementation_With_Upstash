@@ -2,7 +2,9 @@ package com.example;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -35,7 +37,6 @@ public class InMemoryPriorityQueueService implements QueueService {
             queues.put(queueUrl, queue);
         }
 
-        long nowTime = now();
         Message newmessage = new Message(msgBody, priority, System.nanoTime());
         // newmessage.setReceiptId(UUID.randomUUID().toString());
         queue.add(newmessage);
@@ -48,11 +49,13 @@ public class InMemoryPriorityQueueService implements QueueService {
             return null;
         }
         long nowTime = now();
-        Message msg = null;
+        // Message msg = null;
 
         // Find the highest priority message.
-        for (Iterator<Message> it = queue.iterator(); it.hasNext(); ) {
-            msg = it.next();
+        List<Message> sortedMessages = new ArrayList<>(queue);
+        sortedMessages.sort(Message::compareTo); // Sort using the message's comparator logic
+
+        for (Message msg : sortedMessages ) {
             
             if (msg != null && msg.isVisibleAt(nowTime)) {
                 msg.setReceiptId(UUID.randomUUID().toString()); // Set a new receipt ID and increment attempt count and visibility timeout.
