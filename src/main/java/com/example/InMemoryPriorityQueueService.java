@@ -45,31 +45,32 @@ public class InMemoryPriorityQueueService implements QueueService {
     @Override
     public Message pull(String queueUrl) {
         PriorityBlockingQueue<Message> queue = queues.get(queueUrl);
-        if (queue == null) { // return Null if EptyQueue.
+        if (queue == null) {
             return null;
         }
         long nowTime = now();
-        // Message msg = null;
-
-        // Find the highest priority message.
-        List<Message> sortedMessages = new ArrayList<>(queue);
-        sortedMessages.sort(Message::compareTo); // Sort using the message's comparator logic
-
-        for (Message msg : sortedMessages ) {
-            
-            if (msg != null && msg.isVisibleAt(nowTime)) {
-                msg.setReceiptId(UUID.randomUUID().toString()); // Set a new receipt ID and increment attempt count and visibility timeout.
+        Message msg;
+        List<Message> temparray = new ArrayList<>(); // Temporary list to store non-visible messages
+        
+        while ((msg = queue.poll()) != null) { // Poll messages and check visibility
+            if (msg.isVisibleAt(nowTime)) {
+                msg.setReceiptId(UUID.randomUUID().toString());
                 msg.incrementAttempts();
                 msg.setVisibleFrom(System.nanoTime() + TimeUnit.SECONDS.toNanos(visibilityTimeout));
-                // msg.setVisibleFrom(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(visibilityTimeout));
-                
-                System.out.println("Pulled mesggae: " + msg);
-                return new Message(msg.getBody(), msg.getReceiptId()); // Return message with the body and receipt ID
+
+                System.out.println("Pulled message: " + msg);
+                queue.add(msg);
+                return new Message(msg.getBody(), msg.getReceiptId());
             }
+            temparray.add(msg);
         }
 
-        return null;
+        for (Message message : temparray) { // After processing all visible messages, re-add non-visible messages to the queue
+            queue.add(message);
+        }
+        return null; // Return null if no visible message was found
     }
+
 
     @Override
     public void delete(String queueUrl, String receiptId) {
@@ -95,3 +96,16 @@ public class InMemoryPriorityQueueService implements QueueService {
         queues.remove(queueUrl);        
     }
 }
+
+// PriorityBlockingQueue<Message> queue = new PriorityBlockingQueue<>(11, new Comparator<Message>() {
+//     @Override
+//     public int compare(Message m1, Message m2) {
+//         // Higher priority messages come first
+//         int priorityComparison = Integer.compare(m2.getPriority(), m1.getPriority());
+//         if (priorityComparison == 0) {
+//             // If priorities are the same, use timestamp (FIFO for equal priority)
+//             return Long.compare(m1.getTimestamp(), m2.getTimestamp());
+//         }
+//         return priorityComparison;
+//     }
+// });
